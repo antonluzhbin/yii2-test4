@@ -41,7 +41,12 @@ echo Html::a('Рассчитать', $linkCalculate,
         'formatter' => ['class' => 'yii\i18n\Formatter','nullDisplay' => ''],
         'columns' => [
             'id',
-            'name',
+            [
+                'attribute' => 'name',
+                'content' => function($data) {
+                    return Html::encode($data->name);
+                }
+            ],
             'date',
             'day',
             [
