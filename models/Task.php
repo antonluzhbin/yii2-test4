@@ -57,7 +57,8 @@ class Task extends ActiveRecord
         $examDates = [];
         $tasks = [];
         foreach ($items as $item) {
-            $begin = (new DateTime($item->date))->modify("-{$item->day} day")->format('Y-m-d');
+            $day = $item->day + 1;
+            $begin = (new DateTime($item->date))->modify("-{$day} day")->format('Y-m-d');
             $end = (new DateTime($item->date))->format('Y-m-d');
             if (!empty($examDates[$end])) {
                 throw new Exception('DOUBLE_DATE_ERROR');
