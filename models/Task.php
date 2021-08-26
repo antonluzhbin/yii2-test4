@@ -48,7 +48,7 @@ class Task extends ActiveRecord
      * не определено: сколько готовиться - берем 1 день?
      * не определено: можно ли подготовиться к экзамену в день его сдачи - предположим что нет?
      *
-     * @return array|ActiveRecord[]
+     * @return array
      */
     public static function calculate()
     {
@@ -57,35 +57,35 @@ class Task extends ActiveRecord
         $examDates = [];
         $tasks = [];
         foreach ($items as $item) {
-            $day = $item->day + 1;
+            $day = $item->day;
             $begin = (new DateTime($item->date))->modify("-{$day} day")->format('Y-m-d');
             $end = (new DateTime($item->date))->format('Y-m-d');
             if (!empty($examDates[$end])) {
                 throw new Exception('DOUBLE_DATE_ERROR');
             }
             $examDates[$end] = $item->id;
-            $tasks[] = [
-                'id' => $item->id,
-                'day' => $item->day,
-                'begin' => $begin,
-                'end' => $end,
-                'name' => $item->name,
-            ];
+            $exam = new Exam();
+            $exam->id = $item->id;
+            $exam->day = $item->day;
+            $exam->begin = $begin;
+            $exam->end = $end;
+            $exam->name = $item->name;
+            $tasks[] = $exam;
         }
 
         usort($tasks, function ($a, $b) {
-                return $a['begin'] == $b['begin'] ? $a['day'] <=> $b['day'] : $a['begin'] <=> $b['begin'];
+                return $a->begin == $b->begin ? $a->day <=> $b->day : $a->begin <=> $b->begin;
         });
 
         $items = [];
         foreach ($tasks as $task) {
             $ins = false;
-            for ($i = 0; $i < $task['day']; $i++) {
-                $dt = (new DateTime($task['begin']))->modify("+{$i} day")->format('Y-m-d');
+            for ($i = 0; $i < $task->day; $i++) {
+                $dt = (new DateTime($task->begin))->modify("+{$i} day")->format('Y-m-d');
                 if (empty($examDates[$dt])) {
-                    $task['begin'] = $dt;
+                    $task->begin = $dt;
                     $items[] = $task;
-                    $examDates[$dt] = $task['id'];
+                    $examDates[$dt] = $task->id;
                     $ins = true;
                     break;
                 }

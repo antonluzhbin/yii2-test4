@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\Exam;
 use app\models\Task;
 use yii\web\Controller;
 use yii\data\ActiveDataProvider;
@@ -97,8 +98,10 @@ class SiteController extends Controller
             $items = [];
         }
 
+        $dataProvider = Exam::getDataProvider($items);
+
         return $this->render('calculate', [
-            'items' => $items
+            'dataProvider' => $dataProvider
         ]);
     }
 }
