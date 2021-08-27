@@ -45,7 +45,7 @@ class Task extends ActiveRecord
      * в день проведения экзамена готовиться к другому невозможно
      * не может начать готовиться к i-му экзамену раньше чем ti дней до него
      * не может готовиться к двум экзаменам в один и тот же день
-     * не определено: сколько готовиться - берем 1 день?
+     * количество дней ti для подготовки к данному экзамену
      * не определено: можно ли подготовиться к экзамену в день его сдачи - предположим что нет?
      *
      * @return array
@@ -54,7 +54,6 @@ class Task extends ActiveRecord
     {
         $items = Task::find()->orderBy([ 'date' => 'ASK', 'day' => 'ASK' ])->all();
 
-        $examDates = [];
         $tasks = [];
         foreach ($items as $item) {
             $day = $item->day;
@@ -63,7 +62,6 @@ class Task extends ActiveRecord
             if (!empty($examDates[$end])) {
                 throw new Exception('DOUBLE_DATE_ERROR');
             }
-            $examDates[$end] = $item->id;
             $exam = new Exam();
             $exam->id = $item->id;
             $exam->day = $item->day;
@@ -78,19 +76,12 @@ class Task extends ActiveRecord
         });
 
         $items = [];
+        $prev = null;
         foreach ($tasks as $task) {
-            $ins = false;
-            for ($i = 0; $i < $task->day; $i++) {
-                $dt = (new DateTime($task->begin))->modify("+{$i} day")->format('Y-m-d');
-                if (empty($examDates[$dt])) {
-                    $task->begin = $dt;
-                    $items[] = $task;
-                    $examDates[$dt] = $task->id;
-                    $ins = true;
-                    break;
-                }
-            }
-            if (!$ins) {
+            if (empty($prev) || ((new DateTime($task->begin)) > (new DateTime($prev->end)))) {
+                $prev = $task;
+                $items[] = $task;
+            } else {
                 throw new Exception('DATA_ERROR');
             }
         }

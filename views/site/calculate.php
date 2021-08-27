@@ -27,6 +27,7 @@ $this->title = 'План занятий';
             'dataProvider' => $dataProvider,
             'columns' => [
                 'begin',
+                'end',
                 [
                     'attribute' => 'name',
                     'content' => function($data) {
