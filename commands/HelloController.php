@@ -27,8 +27,50 @@ class HelloController extends Controller
      */
     public function actionIndex($message = 'hello world')
     {
-        echo $message . "\n";
+        $result = $this->revertCharacters("Привет! Давно не виделись.");
+        echo $result . "\n"; // Тевирп! Онвад ен ьсиледив.
 
         return ExitCode::OK;
+    }
+
+    public function revertCharacters($str)
+    {
+        $arr = explode(' ', $str);
+
+        for ($i = 0; $i < sizeof($arr); $i++) {
+            $l = mb_substr($arr[$i], mb_strlen($arr[$i]) - 1, 1);
+            $f = mb_substr($arr[$i], 0, 1);
+
+            $upper = false;
+            if ($f === mb_strtoupper($f)) {
+                $arr[$i] = mb_strtolower($f) . mb_substr($arr[$i], 1);
+                $upper = true;
+            }
+
+            if (in_array($l, [ '.', ',', '!', '?', ';', ":" ])) {
+                $w = $this->utf8_strrev(mb_substr($arr[$i], 0, -1));
+                if ($upper) {
+                    $f = mb_substr($w, 0, 1);
+                    $w = mb_strtoupper($f) . mb_substr($w, 1);
+                }
+                $w .= $l;
+            } else {
+                $w = $this->utf8_strrev($arr[$i]);
+                if ($upper) {
+                    $f = mb_substr($w, 0, 1);
+                    $w = mb_strtoupper($f) . mb_substr($w, 1);
+                }
+            }
+
+            $arr[$i] = $w;
+        }
+
+        $str = implode(' ', $arr);
+        return $str;
+    }
+
+    function utf8_strrev($str){
+        preg_match_all('/./us', $str, $ar);
+        return join('', array_reverse($ar[0]));
     }
 }
