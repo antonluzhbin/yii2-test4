@@ -27,46 +27,47 @@ class HelloController extends Controller
      */
     public function actionIndex($message = 'hello world')
     {
+        $result = $this->revertCharacters("ПриВ-ет! Да*вно не виделИсь?");
+        echo $result . "\n";
+        echo "ВирП-те! Ад*онв ен ьсилеДив?\n";
         $result = $this->revertCharacters("Привет! Давно не виделись.");
-        echo $result . "\n"; // Тевирп! Онвад ен ьсиледив.
+        echo $result . "\n";
+        echo "Тевирп! Онвад ен ьсиледив.\n";
 
         return ExitCode::OK;
     }
 
     public function revertCharacters($str)
     {
-        $arr = explode(' ', $str);
-
-        for ($i = 0; $i < sizeof($arr); $i++) {
-            $l = mb_substr($arr[$i], mb_strlen($arr[$i]) - 1, 1);
-            $f = mb_substr($arr[$i], 0, 1);
-
-            $upper = false;
-            if ($f === mb_strtoupper($f)) {
-                $arr[$i] = mb_strtolower($f) . mb_substr($arr[$i], 1);
-                $upper = true;
+        $upper = [];
+        $wordEnd = [];
+        for ($i = 0; $i < mb_strlen($str); $i++) {
+            $l = mb_substr($str, $i, 1);
+            if (in_array($l, [ '.', ',', '!', '?', ';', ":", '-', '*', ' ' ])) {
+                $wordEnd[] = $i;
+            } elseif ($l === mb_strtoupper($l)) {
+                $upper[] = $i;
             }
-
-            if (in_array($l, [ '.', ',', '!', '?', ';', ":" ])) {
-                $w = $this->utf8_strrev(mb_substr($arr[$i], 0, -1));
-                if ($upper) {
-                    $f = mb_substr($w, 0, 1);
-                    $w = mb_strtoupper($f) . mb_substr($w, 1);
-                }
-                $w .= $l;
-            } else {
-                $w = $this->utf8_strrev($arr[$i]);
-                if ($upper) {
-                    $f = mb_substr($w, 0, 1);
-                    $w = mb_strtoupper($f) . mb_substr($w, 1);
-                }
-            }
-
-            $arr[$i] = $w;
         }
 
-        $str = implode(' ', $arr);
-        return $str;
+        $str = mb_strtolower($str);
+
+        $res = '';
+        $begin = 0;
+        for ($i = 0; $i < sizeof($wordEnd); $i++) {
+            $word = mb_substr($str, $begin, ($wordEnd[$i] - $begin));
+            $begin = $wordEnd[$i] + 1;
+            $word = $this->utf8_strrev($word);
+            $res .= $word . mb_substr($str, $wordEnd[$i], 1);
+        }
+
+        for ($i = 0; $i < sizeof($upper); $i++) {
+            $res = mb_substr($res, 0, $upper[$i]) .
+                mb_strtoupper(mb_substr($res, $upper[$i], 1)) .
+                mb_substr($res, ($upper[$i] + 1));
+        }
+
+        return $res;
     }
 
     function utf8_strrev($str){
