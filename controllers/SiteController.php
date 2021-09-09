@@ -2,14 +2,15 @@
 
 namespace app\controllers;
 
-use app\models\Exam;
-use app\models\Task;
+use app\models\Booking;
+use app\models\Category;
 use yii\web\Controller;
+use yii\data\ArrayDataProvider;
 use yii\data\ActiveDataProvider;
 use Yii;
 use yii\web\HttpException;
 use yii\helpers\Url;
-use Exception;
+use DateTime;
 
 class SiteController extends Controller
 {
@@ -33,53 +34,71 @@ class SiteController extends Controller
     public function actionIndex()
     {
         $dataProvider = new ActiveDataProvider([
-            'query' => Task::find(),
+            'query' => Booking::find(),
             'pagination' => [
                 'pageSize' => 20,
             ],
         ]);
 
-        $linkInsert = Url::to([ 'site/update' ]);
-        $linkCalculate = Url::to([ 'site/calculate' ]);
+        $linkSearch = Url::to([ 'site/search' ]);
 
         return $this->render('index', [
             'dataProvider' => $dataProvider,
-            'linkInsert' => $linkInsert,
-            'linkCalculate' => $linkCalculate
+            'linkSearch' => $linkSearch
         ]);
     }
 
-    public function actionUpdate($id = null)
+    public function actionSearch()
     {
-        if (empty($id)) {
-            $model = new Task();
-        } else {
-            $model = Task::findOne($id);
-            if ($model == null) {
-                throw new HttpException(404);
-            }
-        }
+        $request = Yii::$app->request;
+        $startDate = (new DateTime())->format('Y-m-d');
 
-        if ($model->load(Yii::$app->request->post())) {
-            if ($model->validate()) {
-                if (!$model->save()) {
-                    Yii::$app->session->setFlash('SAVE_ERROR');
-                } else {
-                    Yii::$app->session->setFlash('SAVE_OK');
-                }
-            } else {
-                 Yii::$app->session->setFlash('VALIDATE_ERROR');
-            }
-        }
+        $from_date = $request->post('from_date', $startDate);
+        $to_date = $request->post('to_date', $startDate);
+        $date_range = $request->post('date_range', $from_date . ' - ' . $to_date);
 
-        return $this->render('update', [
-            'model' => $model
+        $dataProvider = new ArrayDataProvider([
+            'allModels' => Category::search($from_date, $to_date),
+            'pagination' => false,
         ]);
+
+        $linkSearch = Url::to([ 'site/search' ]);
+        $linkInsert = Url::to([ 'site/insert' ]);
+
+        return $this->render('search', [
+            'dataProvider' => $dataProvider,
+            'linkSearch' => $linkSearch,
+            'linkInsert' => $linkInsert,
+            'date_range' => $date_range
+        ]);
+    }
+
+    public function actionInsert()
+    {
+        $request = Yii::$app->request;
+        $model = new Booking();
+        $model->name = $request->post('name');
+        $model->email = $request->post('email');
+        $model->date_arrival = $request->post('from_date');
+        $model->date_departure = $request->post('to_date');
+        $model->category_id = $request->post('category');
+
+        if ($model->validate() && ((new DateTime($model->date_arrival)) <= (new DateTime($model->date_departure)))) {
+            if (!$model->save()) {
+                Yii::$app->session->setFlash('SAVE_ERROR');
+            } else {
+                Yii::$app->session->setFlash('SAVE_OK');
+            }
+        } else {
+             Yii::$app->session->setFlash('VALIDATE_ERROR');
+        }
+
+        return $this->redirect(['search']);
     }
 
     public function actionDelete($id)
     {
-        $model = Task::findOne($id);
+        $model = Booking::findOne($id);
         if ($model == null) {
             throw new HttpException(404);
         }
@@ -87,21 +106,5 @@ class SiteController extends Controller
         $model->delete();
         Yii::$app->session->setFlash('DELETE_OK');
         return $this->redirect(['index']);
-    }
-
-    public function actionCalculate()
-    {
-        try {
-            $items = Task::calculate();
-        } catch (Exception $e) {
-            Yii::$app->session->setFlash($e->getMessage());
-            $items = [];
-        }
-
-        $dataProvider = Exam::getDataProvider($items);
-
-        return $this->render('calculate', [
-            'dataProvider' => $dataProvider
-        ]);
     }
 }
