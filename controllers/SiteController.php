@@ -33,6 +33,10 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
+        $session = Yii::$app->session;
+        $startDate = $session->get('startDate') ?? (new DateTime())->format('Y-m-d');
+        $endDate = $session->get('endDate') ?? (new DateTime())->format('Y-m-d');
+
         $dataProvider = new ActiveDataProvider([
             'query' => Booking::find(),
             'pagination' => [
@@ -44,18 +48,28 @@ class SiteController extends Controller
 
         return $this->render('index', [
             'dataProvider' => $dataProvider,
-            'linkSearch' => $linkSearch
+            'linkSearch' => $linkSearch,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
         ]);
     }
 
     public function actionSearch()
     {
+        $session = Yii::$app->session;
+        $startDate = $session->get('startDate') ?? (new DateTime())->format('Y-m-d');
+        $endDate = $session->get('endDate') ?? (new DateTime())->format('Y-m-d');
+        $name = $session->get('name') ?? '';
+        $email = $session->get('email') ?? '';
+
         $request = Yii::$app->request;
-        $startDate = (new DateTime())->format('Y-m-d');
 
         $from_date = $request->post('from_date', $startDate);
-        $to_date = $request->post('to_date', $startDate);
+        $to_date = $request->post('to_date', $endDate);
         $date_range = $request->post('date_range', $from_date . ' - ' . $to_date);
+
+        $session->set('startDate', $from_date);
+        $session->set('endDate', $to_date);
 
         $dataProvider = new ArrayDataProvider([
             'allModels' => Category::search($from_date, $to_date),
@@ -69,7 +83,11 @@ class SiteController extends Controller
             'dataProvider' => $dataProvider,
             'linkSearch' => $linkSearch,
             'linkInsert' => $linkInsert,
-            'date_range' => $date_range
+            'date_range' => $date_range,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'name' => $name,
+            'email' => $email
         ]);
     }
 
@@ -84,6 +102,12 @@ class SiteController extends Controller
         $model->category_id = $request->post('category');
 
         if ($model->validate() && ((new DateTime($model->date_arrival)) <= (new DateTime($model->date_departure)))) {
+            $session = Yii::$app->session;
+            $session->set('startDate', $model->date_arrival);
+            $session->set('endDate', $model->date_departure);
+            $session->set('name', $model->name);
+            $session->set('email', $model->email);
+
             if (!$model->save()) {
                 Yii::$app->session->setFlash('SAVE_ERROR');
             } else {

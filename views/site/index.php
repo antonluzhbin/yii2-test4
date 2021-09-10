@@ -3,6 +3,8 @@
 /* @var $this yii\web\View */
 /* @var $dataProvider yii\data\ActiveDataProvider; */
 /* @var $linkSearch string; */
+/* @var $startDate string; */
+/* @var $endDate string; */
 
 use yii\grid\GridView;
 use yii\helpers\Html;
@@ -19,7 +21,6 @@ $this->title = 'Бронь';
         'options' => ['class' => 'form-horizontal'],
     ]) ?>
     <?
-    $startDate = (new DateTime())->format('Y-m-d');
     echo DateRangePicker::widget([
     'name' => 'date_range',
     'useWithAddon' => true,
@@ -27,7 +28,7 @@ $this->title = 'Бронь';
     'language' => 'ru',
     'hideInput' => true,
     'presetDropdown' => false,
-    'value' => $startDate . ' - ' . $startDate,
+    'value' => $startDate . ' - ' . $endDate,
     'startAttribute' => 'from_date',
     'endAttribute' => 'to_date',
     'pluginOptions' => [

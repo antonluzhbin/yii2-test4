@@ -5,6 +5,10 @@
 /* @var $linkSearch string; */
 /* @var $linkInsert string; */
 /* @var $date_range string; */
+/* @var $startDate string; */
+/* @var $endDate string; */
+/* @var $name string; */
+/* @var $email string; */
 
 use yii\grid\GridView;
 use yii\helpers\Html;
@@ -22,7 +26,6 @@ $this->title = 'Поиск комнат';
         'options' => ['class' => 'form-horizontal'],
     ]) ?>
     <?
-    $startDate = (new DateTime())->format('Y-m-d');
     echo DateRangePicker::widget([
         'name' => 'date_range',
         'useWithAddon' => true,
@@ -76,10 +79,10 @@ $this->title = 'Поиск комнат';
     ]); ?>
 
     <div>Имя</div>
-    <?= Html::input('text', 'name', '', [ 'style' => 'display: block; width: 100%; margin-bottom: 20px;' ]) ?>
+    <?= Html::input('text', 'name', $name, [ 'style' => 'display: block; width: 100%; margin-bottom: 20px;' ]) ?>
 
     <div>Email</div>
-    <?= Html::input('email', 'email', '', [ 'style' => 'display: block; width: 100%; margin-bottom: 20px;' ]) ?>
+    <?= Html::input('email', 'email', $email, [ 'style' => 'display: block; width: 100%; margin-bottom: 20px;' ]) ?>
 
     <?= Html::input('hidden', 'from_date', '', [ 'id' => 'from_date' ]) ?>
     <?= Html::input('hidden', 'to_date', '', [ 'id' => 'to_date' ]) ?>
