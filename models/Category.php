@@ -60,8 +60,15 @@ class Category extends ActiveRecord
         $rows = (new \yii\db\Query())
             ->select([])
             ->from('booking')
-            ->where([ 'between', 'date_arrival', $from_date, $to_date ])
-            ->orWhere([ 'between', 'date_departure', $from_date, $to_date ])
+            ->where([ 'or',
+                [ 'between', 'date_arrival', $from_date, $to_date ],
+                [ 'between', 'date_departure', $from_date, $to_date ]
+            ])
+            ->orWhere([ 'and',
+                    [ '<', 'date_arrival', $from_date ],
+                    [ '>', 'date_departure', $to_date ]
+                ]
+            )
             ->all();
 
         foreach ($rows as $row) {
